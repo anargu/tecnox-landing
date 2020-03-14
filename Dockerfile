@@ -1,18 +1,25 @@
-FROM node:10
+FROM node:10-alpine
 
 # Create app directory
-WORKDIR /app
-ADD . /app/
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 
-# global install & update
-RUN npm i -g npm && npm i -g yarn
+# Install app dependencies
+COPY package.json /usr/src/app/
+COPY yarn.lock /usr/src/app/
+RUN yarn install
 
-RUN rm yarn.lock
-RUN yarn
+# Set environment variables
+ENV NODE_ENV production
+ENV NUXT_HOST 0.0.0.0
+ENV NUXT_PORT 3000
+
+# Bundle app source
+COPY . /usr/src/app
 RUN yarn build
 
-ENV HOST 0.0.0.0
-EXPOSE 3000
+# Clear the cache
+RUN yarn cache clean
 
-# start command
+EXPOSE 3000
 CMD [ "yarn", "start" ]
